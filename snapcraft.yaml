@@ -68,6 +68,82 @@ parts:
     prime:
       - usr/bin/app-3
 
+  hplip:
+    # We need only the PostScript printer PPD files and the hpps
+    # filter executable (for support for PIN-secured printing). We
+    # clean up the PPDs from some common errors and as the hpps
+    # executable is very simple, we do not run "./configure; make;
+    # make install" but call gcc directly instead.
+    #
+    # We use the Debian package source instead of the upstream source code
+    # of HPLIP as the Debian package has ~80 patches fixing bugs which are
+    # reported upstream but the patches not adopted upstream.
+    # This way we should have the same user experience in terms of reliability
+    # and quality as with the Debian package.
+    # Note that the repository has all patches already applied, so we do
+    # not need to apply them before building.
+    # Debian source
+    source: https://salsa.debian.org/printing-team/hplip.v2.git
+    source-type: git
+    source-tag: debian/3.22.10+dfsg0-4
+    source-depth: 1 
+# ext:updatesnap
+#   version-format:
+#     format: 'debian/%V'
+#     lower-than: '2'
+#     no-9x-revisions: true
+    # Excluding hplip from the update automation process because the UpdateSnap script is
+    # unable to retrieve the source-tag or source-branch for this repository.
+# ext:updatesnap
+#   version-format:
+#     ignore: true
+    # Upstream source
+    #source: https://sourceforge.net/projects/hplip/files/hplip/3.22.10/hplip-3.22.10.tar.gz
+    plugin: nil
+    override-build: |
+      set -eux
+      cd prnt/hpps
+      touch config.h
+      gcc -o hpps *.c -I. -I$CRAFT_STAGE/usr/include/ -L$CRAFT_STAGE/usr/lib/ -lcups
+      rm config.h
+      cd ../..
+      mkdir -p $CRAFT_PART_INSTALL
+      cp prnt/hpps/hpps $CRAFT_PART_INSTALL
+      # Remove executable bits from PPD files
+      find prnt/ps -executable -type f -print0 | xargs -0 chmod -x || :
+      # Remove non-PPD files from PPD file directories
+      find prnt/ps -type f \! -name '*.ppd*' -print0 | xargs -0 rm || :
+      # Unzip the PPD files (for upstream source)
+      # find prnt/ps -type f -name '*.ppd.gz' -print0 | xargs -0 gunzip || :
+      # Correct common errors in PPD files: "*CloseUI" without ':' and
+      # "*1284DeviceId" instead of "*1284DeviceID"
+      for f in `find prnt/ps -name '*.ppd'`; do perl -p -i -e 's/^\*CloseUI(\s+)/*CloseUI:\1/' $f; perl -p -i -e 's/\*1284DeviceId/*1284DeviceID/' $f; done
+      # Compress the PostScript PPDs in a self-extracting archive
+      $CRAFT_STAGE/bin/pyppd -v -o $CRAFT_PART_INSTALL/hplip-ps-ppds prnt/ps
+      craftctl default
+    build-packages:
+      - perl-base
+      - python3
+      - xz-utils
+    stage-packages:
+      - python3
+      - xz-utils
+    organize:
+      hplip-ps-ppds: usr/share/ppd/hplip-ps-ppds
+      hpps: usr/lib/ps-printer-app/filter/hpps
+    stage:
+      - usr/bin
+      - usr/share/ppd
+      - usr/lib/ps-printer-app
+    prime:
+      - usr/bin/xz
+      - -usr/bin/pdb3
+      - -usr/bin/pydoc3
+      - -usr/bin/pygettext3
+      - usr/share/ppd
+      - usr/lib/ps-printer-app
+    after: [cups, pyppd]
+
   pappl-retrofit:
     source: https://github.com/openprinting/pappl-retrofit
     source-type: git
