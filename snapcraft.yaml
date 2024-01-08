@@ -42,7 +42,7 @@ parts:
     source: https://github.com/Rudra-IITM/versioning-example-app-1
     source-type: git
     plugin: make
-    source-tag: v0.1.4
+    source-tag: 'v1.4.3'
     source-depth: 1
     override-pull: |
       craftctl default
