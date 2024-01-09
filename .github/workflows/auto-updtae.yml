@@ -13,7 +13,7 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v3
       - name: Run desktop-snaps action  
-        uses: Rudra-IITM/desktop-snaps@stable
+        uses: Rudra-IITM/desktop-snap-extend@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: ${{ github.repository }}
