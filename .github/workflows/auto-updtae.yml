@@ -1,4 +1,4 @@
-name: Push new tag update to stable branch
+name: Open a PR if a new update is available
 
 on:
   schedule:
@@ -12,9 +12,8 @@ jobs:
     steps:
       - name: Checkout this repo
         uses: actions/checkout@v3
-      - name: Run desktop-snaps action  
-        uses: Rudra-IITM/desktop-snap-extend@main
+      - name: Run desktop-snaps action
+        uses: Rudra-IITM/desktop-snap@add-action
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           repo: ${{ github.repository }}
-          
