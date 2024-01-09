@@ -41,7 +41,7 @@ parts:
   pappl-retrofit:
     source: https://github.com/openprinting/pappl-retrofit
     source-type: git
-    source-tag: '1.0b2'
+    source-tag: '1.0b1'
     source-depth: 1
 # ext:updatesnap
 #   version-format:
@@ -466,12 +466,13 @@ parts:
   foomatic-db:
     source: https://github.com/OpenPrinting/foomatic-db
     source-type: git
+    source-tag: '20240109'
     source-depth: 1
     # Excluding foomatic-git from the update automation process
     # as it lacks any official releases.
 # ext:updatesnap
 #   version-format:
-#     ignore: true
+#     format: '%V'
     plugin: nil
     override-pull: |
       set -eux
