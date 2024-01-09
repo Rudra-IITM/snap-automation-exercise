@@ -38,73 +38,6 @@ apps:
     command: usr/bin/example-app
 
 parts:
-    pappl:
-    source: https://github.com/michaelrsweet/pappl
-    source-type: git
-    source-tag: 'v1.4.4'
-    source-depth: 1
-# ext:updatesnap
-#   version-format:
-#     lower-than: '2'
-#     no-9x-revisions: true
-    plugin: autotools
-    override-build: |
-      set -eux
-      # Raise the supported number of vendor-specific options/attributes in
-      # PAPPL to 256, as the original 32 can be too small for some busy PPD
-      # files
-      perl -p -i -e 's/(define\s+PAPPL_MAX_VENDOR\s+)32/\1 256/' pappl/printer.h
-      # De-activate log-rotating. It does not work with the forked processes
-      # of the filters
-      perl -p -i -e 's/(system->logmaxsize\s+=).*/\1 0;/' pappl/system.c
-      # As we do not use PAPPL's own backends but the CUPS backends using the
-      # "cups" device scheme of pappl-retrofit, we let the manual "Network
-      # Printer" device on the "Add Printer" page of the web interface use a
-      # "cups:socket://..." URI instead of simply "socket://..."
-      perl -p -i -e 's/(httpAssembleURI\(.*?)"socket"(.*?\))/\1"cups:socket"\2/' pappl/system-webif.c
-      # PAPPL's build system does not insert the LDFLAGS when linking.
-      # Patching Makedefs.in to fix this
-      perl -p -i -e 's/^(\s*DSOFLAGS\s*=\s*\S*\s+)/\1\$\(LDFLAGS\) /' Makedefs.in
-      craftctl default
-    autotools-configure-parameters:
-      - --prefix=/usr
-      - --with-papplstatedir=/var/snap/ps-printer-app/common
-      - --with-papplsockdir=/var/snap/ps-printer-app/common/tmp
-      - --enable-libjpeg
-      - --enable-libpng
-      - --enable-libusb
-      - --with-dnssd=avahi
-    build-packages:
-      - libavahi-client-dev
-      - libgnutls28-dev
-      - libjpeg-dev
-      - libpam0g-dev
-      - libpng-dev
-      - libusb-1.0-0-dev
-      - zlib1g-dev
-      - perl-base
-    stage-packages:
-      # We have libavahi-client3 already in this Snap via the "cups" part,
-      # so here we do not stage it again to avoid any file clashes.
-      #- libavahi-client3
-      - libpng16-16
-      - libusb-1.0-0
-    prime:
-      - -etc/fonts
-      - -var
-      - lib/*/lib*.so*
-      - usr/lib/lib*.so*
-      - usr/lib/*/lib*.so*
-      - -usr/include
-      - -usr/lib/pkgconfig
-      - -usr/share/fonts
-      - -usr/share/man
-      - -usr/share/doc
-      - -usr/share/doc-base
-      - -usr/share/lintian
-      - -snap
-    after: [cups]
-
   pappl-retrofit:
     source: https://github.com/openprinting/pappl-retrofit
     source-type: git
@@ -728,7 +661,6 @@ parts:
       - -var
       - -usr/share/man
     after: [pappl-retrofit, pappl, libcupsfilters, libppd, cups-filters, foomatic-db, hplip]
-
 
   scripts:
     source: .
